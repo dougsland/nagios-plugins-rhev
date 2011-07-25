@@ -1,0 +1,98 @@
+#!/usr/bin/python
+#
+# Copyright (C) 2011
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 2 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+import sys
+import os
+import socket
+
+try:
+        from iniparse import ConfigParser
+except:
+        print "Package python-iniparse is required, please install"
+        print "#yum install python-iniparse -y"
+	sys.exit(2)
+
+# Exit statuses recognized by Nagios
+UNKNOWN   = -1
+OK        = 0
+WARNING   = 1
+CRITICAL  = 2
+CONF_FILE = "/usr/lib64/nagios/plugins/rhev/hosts.conf"
+
+# General macros
+VDSM_PORT = 54321
+TIMEOUT_SOCKET_SEC = 5
+
+class checkSPM:
+
+	##########################################################################
+        # __init__()                                                             #
+        # Description: Initialize method                                         #
+        ##########################################################################
+	def __init__(self):
+		pass
+
+	##########################################################################
+        # do_connect()                                                           #
+        # Description: Do a connection with vdsm daemon                          #
+        ##########################################################################
+        def do_connect(self, hosts):
+		i = 0
+		while(i <> len(hosts)):
+			# Connection Validation
+			sk = socket.socket()
+			sk.settimeout(TIMEOUT_SOCKET_SEC)
+			try:
+				sk.connect((hosts[i], int(VDSM_PORT)))
+			except Exception, e:
+				print "CRITICAL: Unable to connect VDSM HOST: %s" % hosts[i]
+				sk.close()
+				sys.exit(CRITICAL)
+
+			sk.close()
+			i += 1
+
+
+	##########################################################################
+        # verify_conf()                                                          #
+        # Description: Do a connection with vdsm daemon                          #
+        ##########################################################################
+	def verify_conf(self):
+		if not os.path.exists(CONF_FILE):
+			print "WARNING: Cannot locate hosts.conf"
+			sys.exit(WARNING)
+
+	##########################################################################
+        # read_hosts_ip()                                                        #
+        # Description: Read hosts each we will keep pooling			 #
+        ##########################################################################
+	def read_hosts_ip(self):
+		cfg = ConfigParser()
+		cfg.read(CONF_FILE)
+		cfg.get('hosts', 'ip')
+
+		return cfg.data.hosts.ip
+
+if __name__ == "__main__":
+
+	Vc = checkSPM()
+
+	Vc.verify_conf() 
+
+	ret = Vc.read_hosts_ip()
+	hosts = ret.split(",")
+
+	Vc.do_connect(hosts)
+
+	print "OK: VDSM is reachable"
+	sys.exit(OK)
