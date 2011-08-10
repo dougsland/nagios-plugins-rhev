@@ -60,6 +60,7 @@ class checkSPM:
 				print "OK: VDSM is UP @ %s" % hosts[i]
 			except Exception, e:
 				print "CRITICAL: Unable to connect VDSM HOST: %s" % hosts[i]
+				sys.exit(CRITICAL)
 				sk.close()
 			sk.close()
 			i += 1
@@ -101,14 +102,14 @@ class checkSPM:
 				for line in data:
 					status = "Up"
 					if line.find(status) != -1 and line.find(guest) != -1:
-						print "OK: %s UP @ %s" % (guest, hosts[i]) 
+						print "OK: %s UP @ %s" % (guest, hosts[i])
+						sys.exit(OK) 
 				error = stderr.readlines()
 				for line in error:
 					status = "command not found"
 					if line.find(status) != -1:
 						print "error: please install vdsClient, host: %s" % hosts[i]
 			except Exception, e:
-				print "CRITICAL: Unable to connect HOST: %s" % hosts[i]
 				ssh.close()
 
 			ssh.close()
@@ -140,5 +141,5 @@ if __name__ == "__main__":
                 passw = options.passw
                 guest = options.guest
                 Vc.checkVMS(hosts, user, passw, guest)
-                sys.exit(OK)
+                sys.exit(CRITICAL)
 
