@@ -14,6 +14,9 @@
 import sys
 import os
 import socket
+import paramiko
+
+from optparse import OptionParser
 
 try:
         from iniparse import ConfigParser
@@ -48,17 +51,16 @@ class checkSPM:
         ##########################################################################
         def do_connect(self, hosts):
 		i = 0
-		while(i <> len(hosts)):
+		while(i < len(hosts)):
 			# Connection Validation
 			sk = socket.socket()
 			sk.settimeout(TIMEOUT_SOCKET_SEC)
 			try:
 				sk.connect((hosts[i], int(VDSM_PORT)))
+				print "OK: VDSM is UP @ %s" % hosts[i]
 			except Exception, e:
 				print "CRITICAL: Unable to connect VDSM HOST: %s" % hosts[i]
 				sk.close()
-				sys.exit(CRITICAL)
-
 			sk.close()
 			i += 1
 
@@ -83,16 +85,60 @@ class checkSPM:
 
 		return cfg.data.hosts.ip
 
+        ##########################################################################
+        # checkVMS()                                                             #
+        # Description: Check Guests        	   			         #
+        ##########################################################################
+	def checkVMS(self, hosts, user, passw, guest):
+		i = 0
+		while(i < len(hosts)):
+			ssh = paramiko.SSHClient()
+			ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+			try:
+				ssh.connect(hosts[i],username=user,password=passw)
+				stdin, stdout, stderr = ssh.exec_command('vdsClient -s 0 list table')
+				data = stdout.readlines()
+				for line in data:
+					status = "Up"
+					if line.find(status) != -1 and line.find(guest) != -1:
+						print "OK: %s UP @ %s" % (guest, hosts[i]) 
+				error = stderr.readlines()
+				for line in error:
+					status = "command not found"
+					if line.find(status) != -1:
+						print "error: please install vdsClient, host: %s" % hosts[i]
+			except Exception, e:
+				print "CRITICAL: Unable to connect HOST: %s" % hosts[i]
+				ssh.close()
+
+			ssh.close()
+			i += 1
+
 if __name__ == "__main__":
+        usage = "usage: %prog [options] arg"
+        parser = OptionParser(usage)
+        parser.add_option("-v", "--verbose", action="store_true", dest="verbose")
+        parser.add_option("-q", "--quiet", action="store_false", dest="verbose")
+        parser.add_option("-t", "--type-service", action="store", dest="type_service")
+        parser.add_option("-g", "--guest", action="store", dest="guest")
+        parser.add_option("-u", "--user", action="store", dest="user")
+        parser.add_option("-p", "--password", action="store", dest="passw")
+        (options, args) = parser.parse_args()
+        if options.type_service == 'checkSPM':
+                Vc = checkSPM()
+                Vc.verify_conf()
+                ret = Vc.read_hosts_ip()
+                hosts = ret.split(",")
+                Vc.do_connect(hosts)
+                sys.exit(OK)
+        if options.type_service == 'checkVMS':
+                Vc = checkSPM()
+                Vc.verify_conf()
+                ret = Vc.read_hosts_ip()
+                hosts = ret.split(",")
+                user = options.user
+                passw = options.passw
+                guest = options.guest
+                Vc.checkVMS(hosts, user, passw, guest)
+                sys.exit(OK)
 
-	Vc = checkSPM()
-
-	Vc.verify_conf() 
-
-	ret = Vc.read_hosts_ip()
-	hosts = ret.split(",")
-
-	Vc.do_connect(hosts)
-
-	print "OK: VDSM is reachable"
-	sys.exit(OK)
