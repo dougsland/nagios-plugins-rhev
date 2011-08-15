@@ -36,7 +36,7 @@ CONF_FILE = "/usr/lib64/nagios/plugins/rhev/hosts.conf"
 VDSM_PORT = 54321
 TIMEOUT_SOCKET_SEC = 5
 
-class checkSPM:
+class checkRHEV:
 
 	##########################################################################
         # __init__()                                                             #
@@ -58,12 +58,15 @@ class checkSPM:
 			try:
 				sk.connect((hosts[i], int(VDSM_PORT)))
 				print "OK: VDSM is UP @ %s" % hosts[i]
+				ret = OK
 			except Exception, e:
 				print "CRITICAL: Unable to connect VDSM HOST: %s" % hosts[i]
-				sys.exit(CRITICAL)
-				sk.close()
+				ret = CRITICAL
+				break
 			sk.close()
 			i += 1
+
+		return ret
 
 
 	##########################################################################
@@ -115,7 +118,9 @@ class checkSPM:
 			ssh.close()
 			i += 1
 
+# MAIN
 if __name__ == "__main__":
+
         usage = "usage: %prog [options] arg"
         parser = OptionParser(usage)
         parser.add_option("-v", "--verbose", action="store_true", dest="verbose")
@@ -125,21 +130,31 @@ if __name__ == "__main__":
         parser.add_option("-u", "--user", action="store", dest="user")
         parser.add_option("-p", "--password", action="store", dest="passw")
         (options, args) = parser.parse_args()
-        if options.type_service == 'checkSPM':
-                Vc = checkSPM()
-                Vc.verify_conf()
-                ret = Vc.read_hosts_ip()
-                hosts = ret.split(",")
-                Vc.do_connect(hosts)
-                sys.exit(OK)
-        if options.type_service == 'checkVMS':
-                Vc = checkSPM()
-                Vc.verify_conf()
-                ret = Vc.read_hosts_ip()
-                hosts = ret.split(",")
-                user = options.user
-                passw = options.passw
-                guest = options.guest
-                Vc.checkVMS(hosts, user, passw, guest)
-                sys.exit(CRITICAL)
 
+	# Generic calls - every option will use them
+	rhev = checkRHEV()
+        rhev.verify_conf()
+        ret = rhev.read_hosts_ip()
+        hosts = ret.split(",")
+
+	user  = options.user
+        passw = options.passw
+        guest = options.guest
+
+	# TODO: create All option	
+	#if options.type_service == 'All':
+	#	pass
+
+        if options.type_service == 'checkSPM':
+		ret = rhev.do_connect(hosts)
+		if ret != OK:
+			sys.exit(CRITICAL)
+
+		sys.exit(OK)
+
+        if options.type_service == 'checkVMS':
+                rhev.checkVMS(hosts, user, passw, guest)
+                sys.exit(CRITICAL)
+	else:
+		print "UNKNOWN: invalid option, please verify check_rhev -h"
+		sys.exit(UNKNOWN)
