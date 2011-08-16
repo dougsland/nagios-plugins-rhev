@@ -47,5 +47,5 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
-* Tue Aug 15 2011 Douglas Schilling Landgraf <dougsland@redhat.com> 1.0.0
+* Tue Aug 15 2011 Douglas Schilling Landgraf <dougsland@redhat.com> 1.0.0-1
 - Initial Commit
