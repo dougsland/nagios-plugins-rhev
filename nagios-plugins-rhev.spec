@@ -15,9 +15,9 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:      noarch
 
 %if (0%{?fedora} > 12 || 0%{?rhel} > 5)
-BuildRequires: python-devel, python-setuptools-devel, nagios-plugins
+BuildRequires: python-devel, python-setuptools-devel, nagios-plugins, python-paramiko
 %else
-BuildRequires: python-devel, python-setuptools, nagios-plugins
+BuildRequires: python-devel, python-setuptools, nagios-plugins, python-paramiko
 %endif
 
 %description
