@@ -33,6 +33,7 @@ HOSTS	  = ""
 # General macros
 VDSM_PORT = 54321
 TIMEOUT_SOCKET_SEC = 5
+VERSION = 1.0.0
 
 class checkRHEV:
 
