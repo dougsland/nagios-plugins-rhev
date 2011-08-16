@@ -130,7 +130,7 @@ if __name__ == "__main__":
 	#if options.type_service == 'All':
 	#	pass
 
-        if options.type_service == 'checkSPM':
+        if options.type_service == 'checkHOST':
 		ret = rhev.do_connect(hosts)
 		if ret != OK:
 			sys.exit(CRITICAL)
