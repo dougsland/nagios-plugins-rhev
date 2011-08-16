@@ -41,7 +41,7 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,-)
 %doc README COPYING
-%{nagios_plugins_dir}/nagios/plugins/check_rhev
+%{nagios_plugins_dir}/check_rhev
 %if (0%{?fedora} > 12 || 0%{?rhel} > 5)
 %{python_sitelib}/*.egg-info
 %endif
