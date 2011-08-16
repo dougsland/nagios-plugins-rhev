@@ -18,19 +18,17 @@ import paramiko
 
 from optparse import OptionParser
 
-try:
-        from iniparse import ConfigParser
-except:
-        print "Package python-iniparse is required, please install"
-        print "#yum install python-iniparse -y"
-	sys.exit(2)
-
 # Exit statuses recognized by Nagios
 UNKNOWN   = -1
 OK        = 0
 WARNING   = 1
 CRITICAL  = 2
-CONF_FILE = "/usr/lib64/nagios/plugins/rhev/hosts.conf"
+
+###############
+# ATTENTION:  #
+###############
+# Add your rhev-h host below, like "192.168.1.101,192.168.1.102, ..."
+HOSTS	  = ""
 
 # General macros
 VDSM_PORT = 54321
@@ -68,26 +66,6 @@ class checkRHEV:
 
 		return ret
 
-
-	##########################################################################
-        # verify_conf()                                                          #
-        # Description: Do a connection with vdsm daemon                          #
-        ##########################################################################
-	def verify_conf(self):
-		if not os.path.exists(CONF_FILE):
-			print "WARNING: Cannot locate hosts.conf"
-			sys.exit(WARNING)
-
-	##########################################################################
-        # read_hosts_ip()                                                        #
-        # Description: Read hosts each we will keep pooling			 #
-        ##########################################################################
-	def read_hosts_ip(self):
-		cfg = ConfigParser()
-		cfg.read(CONF_FILE)
-		cfg.get('hosts', 'ip')
-
-		return cfg.data.hosts.ip
 
         ##########################################################################
         # checkVMS()                                                             #
@@ -131,11 +109,17 @@ if __name__ == "__main__":
         parser.add_option("-p", "--password", action="store", dest="passw")
         (options, args) = parser.parse_args()
 
+	if HOSTS == "":
+		print "UNKNOWN: please add your RHEV-H hosts into check_rhev!"
+		sys.exit(UNKNOWN)
+		
+	if options.type_service == None:
+		print "UNKNOWN: invalid option, please verify check_rhev -h"
+		sys.exit(UNKNOWN)
+
 	# Generic calls - every option will use them
 	rhev = checkRHEV()
-        rhev.verify_conf()
-        ret = rhev.read_hosts_ip()
-        hosts = ret.split(",")
+        hosts = HOSTS.split(",")
 
 	user  = options.user
         passw = options.passw
