@@ -34,6 +34,7 @@ HOSTS	  = ""
 VDSM_PORT = 54321
 TIMEOUT_SOCKET_SEC = 5
 VERSION = "1.0.0"
+VDSM_COMMAND = "vdsCLient"
 
 class checkRHEV:
 
@@ -79,7 +80,7 @@ class checkRHEV:
 			ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 			try:
 				ssh.connect(hosts[i],username=user,password=passw)
-				stdin, stdout, stderr = ssh.exec_command('vdsClient -s 0 list table')
+				stdin, stdout, stderr = ssh.exec_command('VDSM_COMMAND -s 0 list table')
 				data = stdout.readlines()
 				for line in data:
 					status = "Up"
