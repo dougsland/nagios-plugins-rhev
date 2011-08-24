@@ -4,7 +4,7 @@
 
 Name:           nagios-plugins-rhev
 Version:        1.0.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Nagios Plugin - check_rhev
 
 Group:          Applications/System
@@ -14,10 +14,12 @@ Source0:        https://github.com/dougsland/nagios-plugins-rhev/raw/master/%{na
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:      noarch
 
+Requires:       nagios-plugins, python-paramiko
+
 %if (0%{?fedora} > 12 || 0%{?rhel} > 5)
-BuildRequires: python-devel, python-setuptools-devel, nagios-plugins, python-paramiko
+BuildRequires: python-devel, python-setuptools-devel
 %else
-BuildRequires: python-devel, python-setuptools, nagios-plugins, python-paramiko
+BuildRequires: python-devel, python-setuptools
 %endif
 
 %description
@@ -47,5 +49,10 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Tue Aug 23 2011 Douglas Schilling Landgraf <dougsland@redhat.com> 1.0.0-2
+- Fixed the setup egg name
+- Split BuildRequires to BuildRequires and Requires
+- Fixed md5sum check
+
 * Tue Aug 15 2011 Douglas Schilling Landgraf <dougsland@redhat.com> 1.0.0-1
 - Initial Commit
