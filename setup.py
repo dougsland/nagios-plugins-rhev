@@ -1,6 +1,6 @@
 from distutils.core import setup
 
-setup(name='python-confparser', version='1.0.0',
+setup(name='nagios-plugins-rhev', version='1.0.0',
       description='Python Nagios extension to RHEV',
       author='Douglas Schilling Landgraf',
       author_email='dougsland@redhat.com',
