@@ -11,6 +11,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+# vim: tabstop=8 noexpandtab shiftwidth=4 softtabstop=4
+
 import sys
 import os
 import socket
@@ -33,23 +35,23 @@ HOSTS	  = ""
 # General macros
 VDSM_PORT = 54321
 TIMEOUT_SOCKET_SEC = 5
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 VDSM_COMMAND = "vdsClient"
 
 class checkRHEV:
 
-	##########################################################################
-        # __init__()                                                             #
-        # Description: Initialize method                                         #
-        ##########################################################################
+	#########################################################################
+	# __init__()								#
+	# Description: Initialize method					#
+	#########################################################################
 	def __init__(self):
 		pass
 
-	##########################################################################
-        # do_connect()                                                           #
-        # Description: Do a connection with vdsm daemon                          #
-        ##########################################################################
-        def do_connect(self, hosts):
+	#########################################################################
+	# do_connect()								#
+	# Description: Do a connection with vdsm daemon				#
+	#########################################################################
+	def do_connect(self, hosts):
 		i = 0
 		while(i < len(hosts)):
 			# Connection Validation
@@ -69,10 +71,10 @@ class checkRHEV:
 		return ret
 
 
-        ##########################################################################
-        # checkVMS()                                                             #
-        # Description: Check Guests        	   			         #
-        ##########################################################################
+	#########################################################################
+	# checkVMS()								#
+	# Description: Check Guests						#
+	#########################################################################
 	def checkVMS(self, hosts, user, passw, guest):
 		i = 0
 		while(i < len(hosts)):
@@ -93,6 +95,7 @@ class checkRHEV:
 					if line.find(status) != -1:
 						print "error: please install vdsClient, host: %s" % hosts[i]
 			except Exception, e:
+				print "problem connecting to the host " , hosts[i]
 				ssh.close()
 
 			ssh.close()
@@ -101,17 +104,21 @@ class checkRHEV:
 # MAIN
 if __name__ == "__main__":
 
-        usage = "usage: %prog [options] arg"
-        parser = OptionParser(usage)
-        parser.add_option("-v", "--verbose", action="store_true", dest="verbose")
-        parser.add_option("-q", "--quiet", action="store_false", dest="verbose")
-        parser.add_option("-t", "--type-service", action="store", dest="type_service")
-        parser.add_option("-g", "--guest", action="store", dest="guest")
-        parser.add_option("-u", "--user", action="store", dest="user")
-        parser.add_option("-p", "--password", action="store", dest="passw")
-        (options, args) = parser.parse_args()
+	usage = "usage: %prog [options] arg"
+	parser = OptionParser(usage)
+	parser.add_option("-v", "--verbose", action="store_true", dest="verbose")
+	parser.add_option("-q", "--quiet", action="store_false", dest="verbose")
+	parser.add_option("-t", "--type-service", action="store", dest="type_service")
+	parser.add_option("-g", "--guest", action="store", dest="guest")
+	parser.add_option("-u", "--user", action="store", dest="user")
+	parser.add_option("-p", "--password", action="store", dest="passw")
+	parser.add_option("-H", "--host", action="append", dest="hosts")
+	(options, args) = parser.parse_args()
 
-	if HOSTS == "":
+	if options.verbose:
+		print "list of options: " , options
+
+	if ( HOSTS == "" ) and ( len(options.hosts) == 0 ) :
 		print "UNKNOWN: please add your RHEV-H hosts into check_rhev!"
 		sys.exit(UNKNOWN)
 		
@@ -121,26 +128,29 @@ if __name__ == "__main__":
 
 	# Generic calls - every option will use them
 	rhev = checkRHEV()
-        hosts = HOSTS.split(",")
+	hosts = filter(None, HOSTS.split(",") + options.hosts )
 
+	if options.verbose:
+		print "list of hosts: " , hosts
+	
 	user  = options.user
-        passw = options.passw
-        guest = options.guest
+	passw = options.passw
+	guest = options.guest
 
 	# TODO: create All option	
 	#if options.type_service == 'All':
 	#	pass
 
-        if options.type_service == 'checkHOST':
+	if options.type_service == 'checkHOST':
 		ret = rhev.do_connect(hosts)
 		if ret != OK:
 			sys.exit(CRITICAL)
 
 		sys.exit(OK)
 
-        if options.type_service == 'checkVMS':
-                rhev.checkVMS(hosts, user, passw, guest)
-                sys.exit(CRITICAL)
+	if options.type_service == 'checkVMS':
+		rhev.checkVMS(hosts, user, passw, guest)
+		sys.exit(CRITICAL)
 	else:
 		print "UNKNOWN: invalid option, please verify check_rhev -h"
 		sys.exit(UNKNOWN)
